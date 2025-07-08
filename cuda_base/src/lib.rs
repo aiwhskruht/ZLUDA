@@ -200,7 +200,7 @@ impl VisitMut for FixFnSignatures {
 
 const MODULES: &[&str] = &[
     "context", "device", "driver", "function", "library", "link", "memory", "module", "pointer",
-    "stream",
+    "stream", "event",
 ];
 
 #[proc_macro]
