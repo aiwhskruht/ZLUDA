@@ -98,7 +98,19 @@ macro_rules! from_cuda_object {
         $(
             impl<'a> FromCuda<'a, <$type_ as ZludaObject>::CudaHandle> for <$type_ as ZludaObject>::CudaHandle {
                 fn from_cuda(handle: &'a <$type_ as ZludaObject>::CudaHandle) -> Result<<$type_ as ZludaObject>::CudaHandle, CUerror> {
+                    if *handle == <$type_ as ZludaObject>::NullHandle {
+                        return Err(CUerror::INVALID_HANDLE)
+                    }
                     Ok(*handle)
+                }
+            }
+
+            impl<'a> FromCuda<'a, <$type_ as ZludaObject>::CudaHandle> for Option<<$type_ as ZludaObject>::CudaHandle> {
+                fn from_cuda(handle: &'a <$type_ as ZludaObject>::CudaHandle) -> Result<Option<<$type_ as ZludaObject>::CudaHandle>, CUerror> {
+                    if *handle == <$type_ as ZludaObject>::NullHandle {
+                        return Ok(None)
+                    }
+                    Ok(Some(*handle))
                 }
             }
 
@@ -106,16 +118,20 @@ macro_rules! from_cuda_object {
                 fn from_cuda(handle: &'a *mut <$type_ as ZludaObject>::CudaHandle) -> Result<&'a mut <$type_ as ZludaObject>::CudaHandle, CUerror> {
                     match unsafe { handle.as_mut() } {
                         Some(x) => Ok(x),
-                        None => Err(CUerror::INVALID_VALUE),
+                        None => Err(CUerror::INVALID_HANDLE),
                     }
                 }
             }
 
             impl<'a> FromCuda<'a, <$type_ as ZludaObject>::CudaHandle> for &'a $type_ {
                 fn from_cuda(handle: &'a <$type_ as ZludaObject>::CudaHandle) -> Result<&'a $type_, CUerror> {
+                    if *handle == <$type_ as ZludaObject>::NullHandle {
+                        return Err(CUerror::INVALID_HANDLE)
+                    }
                     Ok(as_ref(handle).as_result()?)
                 }
             }
+            
         )*
     };
 }
@@ -123,6 +139,7 @@ macro_rules! from_cuda_object {
 from_cuda_nop!(
     *mut i8,
     *mut i32,
+    *mut u32,
     *mut usize,
     *const ::core::ffi::c_void,
     *const ::core::ffi::c_char,
@@ -139,7 +156,8 @@ from_cuda_nop!(
     CUjit_option,
     CUlibraryOption,
     CUmoduleLoadingMode,
-    CUuuid
+    CUuuid,
+    CUfunc_cache
 );
 from_cuda_transmute!(
     CUuuid => hipUUID,
@@ -184,6 +202,7 @@ impl<'a> FromCuda<'a, *const ::core::ffi::c_void> for &'a ::core::ffi::c_void {
 pub(crate) trait ZludaObject: Sized + Send + Sync {
     const COOKIE: usize;
     const LIVENESS_FAIL: CUerror = cuda_types::cuda::CUerror::INVALID_VALUE;
+    const NullHandle: Self::CudaHandle;
 
     type CudaHandle: Sized;
 
@@ -247,7 +266,7 @@ pub fn as_ref<'a, T: ZludaObject>(
     unsafe { mem::transmute(handle) }
 }
 
-pub fn drop_checked<T: ZludaObject>(handle: T::CudaHandle) -> Result<(), CUerror> {
+pub fn drop_checked<T: ZludaObject>(handle: T::CudaHandle) -> CUresult {
     let mut wrapped_object: ManuallyDrop<Box<LiveCheck<T>>> =
         unsafe { mem::transmute_copy(&handle) };
     let underlying_error = LiveCheck::drop_checked(&mut wrapped_object)?;

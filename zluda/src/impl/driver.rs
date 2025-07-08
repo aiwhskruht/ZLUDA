@@ -64,7 +64,7 @@ pub(crate) fn global_state() -> Result<&'static GlobalState, CUerror> {
                             ))
                             .map_err(|_| CUerror::UNKNOWN)?
                             .to_owned(),
-                            primary_context: LiveCheck::new(context::Context::new(i)),
+                            primary_context: LiveCheck::new(context::Context::new(i, 0, context::ContextKind::Primary)),
                         })
                     })
                     .collect::<Result<Vec<_>, _>>()?,

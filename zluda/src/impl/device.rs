@@ -495,10 +495,40 @@ pub(crate) fn primary_context_release(hip_dev: hipDevice_t) -> CUresult {
     Ok(())
 }
 
+pub(crate) fn primary_context_release_v2(hip_dev: hipDevice_t) -> CUresult {
+    primary_context_release(hip_dev)
+}
+
 pub(crate) fn primary_context_reset(hip_dev: hipDevice_t) -> CUresult {
     let (ctx, _) = get_primary_context(hip_dev)?;
     ctx.with_state_mut(|state| {
         state.reset()
     })?;
+    Ok(())
+}
+
+pub(crate) fn primary_context_reset_v2(hip_dev: hipDevice_t) -> CUresult {
+    primary_context_reset(hip_dev)
+}
+
+pub(crate) fn primary_context_set_flags(
+    hip_dev: hipDevice_t, 
+    flags: ::std::os::raw::c_uint
+) -> CUresult {
+    Ok(())
+}
+
+pub(crate) fn primary_context_set_flags_v2(
+    hip_dev: hipDevice_t, 
+    flags: ::std::os::raw::c_uint
+) -> CUresult {
+    primary_context_set_flags(hip_dev, flags)
+}
+
+pub(crate) fn primary_context_get_state(
+    hip_dev: hipDevice_t, 
+    flags: &mut ::std::os::raw::c_uint,
+    active: &mut ::std::os::raw::c_int,
+) -> CUresult {
     Ok(())
 }

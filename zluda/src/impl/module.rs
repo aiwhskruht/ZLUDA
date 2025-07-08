@@ -13,6 +13,7 @@ pub(crate) struct Module {
 
 impl ZludaObject for Module {
     const COOKIE: usize = 0xe9138bd040487d4a;
+    const NullHandle: CUmodule = CUmodule(std::ptr::null_mut());
 
     type CudaHandle = CUmodule;
 

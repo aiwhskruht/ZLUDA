@@ -3,8 +3,11 @@ use std::sync::atomic::{AtomicBool, Ordering};
 pub(crate) mod r#impl;
 
 static INITIALIZED: AtomicBool = AtomicBool::new(true);
-pub(crate) fn initialized() -> bool {
-    INITIALIZED.load(Ordering::SeqCst)
+pub(crate) fn check_initialized() -> CUresult {
+    match INITIALIZED.load(Ordering::SeqCst) {
+        true => Ok(()),
+        false => Err(CUerror::DEINITIALIZED)
+    }
 }
 #[dtor::dtor]
 fn deinitialize() {
@@ -61,16 +64,24 @@ macro_rules! implemented_in_function {
 cuda_base::cuda_function_declarations!(
     unimplemented,
     implemented <= [
-        cuCtxGetLimit,
-        cuCtxSetCurrent,
-        cuCtxGetCurrent,
-        cuCtxGetDevice,
-        cuCtxSetLimit,
-        cuCtxSynchronize,
+        cuCtxCreate,
+        cuCtxCreate_v2,
+        cuCtxDestroy,
+        cuCtxDestroy_v2,
         cuCtxPushCurrent,
         cuCtxPushCurrent_v2,
         cuCtxPopCurrent,
         cuCtxPopCurrent_v2,
+        cuCtxSetCurrent,
+        cuCtxGetCurrent,
+        cuCtxGetDevice,
+        cuCtxGetLimit,
+        cuCtxSetLimit,
+        cuCtxSetFlags,
+        cuCtxGetStreamPriorityRange,
+        cuCtxSynchronize,
+        cuCtxSetCacheConfig,
+        cuCtxGetApiVersion,
         cuDeviceComputeCapability,
         cuDeviceGet,
         cuDeviceGetAttribute,
@@ -80,9 +91,14 @@ cuda_base::cuda_function_declarations!(
         cuDeviceGetProperties,
         cuDeviceGetUuid,
         cuDeviceGetUuid_v2,
-        cuDevicePrimaryCtxRelease,
         cuDevicePrimaryCtxRetain,
+        cuDevicePrimaryCtxRelease,
+        cuDevicePrimaryCtxRelease_v2,
         cuDevicePrimaryCtxReset,
+        cuDevicePrimaryCtxReset_v2,
+        cuDevicePrimaryCtxSetFlags,
+        cuDevicePrimaryCtxSetFlags_v2,
+        cuDevicePrimaryCtxGetState,
         cuDeviceTotalMem_v2,
         cuDriverGetVersion,
         cuFuncGetAttribute,

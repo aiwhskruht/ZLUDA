@@ -10,6 +10,7 @@ pub(crate) struct Library {
 
 impl ZludaObject for Library {
     const COOKIE: usize = 0xb328a916cc234d7c;
+    const NullHandle: CUlibrary = CUlibrary(std::ptr::null_mut());
 
     type CudaHandle = CUlibrary;
 
